@@ -1,0 +1,6 @@
+{
+    "app_name": "audio_converter",
+    "author": "Jack",
+    "main_module": "src/main/python/main.py",
+    "version": "0.0.0"
+}
