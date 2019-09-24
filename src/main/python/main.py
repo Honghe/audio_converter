@@ -4,6 +4,10 @@ import sys
 import time
 import traceback
 
+# TODO, better solution to use local package.
+PACKAGE_PARENT = '.'
+SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
+sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 import ffmpeg
 from PyQt5 import uic, QtWidgets
@@ -84,6 +88,7 @@ class Ui(QtWidgets.QMainWindow):
         super(Ui, self).__init__()
         # https://github.com/mherrmann/fbs/issues/32
         uic.loadUi(appctxt.get_resource('main.ui'), self)
+        # `findChild(,'open')`非必需，比如uic会自动在此自动生成`self.open`
         self.open_button = self.findChild(QtWidgets.QPushButton, 'open')
         self.convert_button = self.findChild(QtWidgets.QPushButton, 'convertButton')
         self.output_button = self.findChild(QtWidgets.QPushButton, 'output')
@@ -100,6 +105,7 @@ class Ui(QtWidgets.QMainWindow):
         self.output_dir = None
         self.mutex = QMutex()
         self.thread_pool = QThreadPool()
+        self.thread_pool.setMaxThreadCount(os.cpu_count() - 1) # for not use all system cpu
         self.show()
 
     def convert(self, entry):
