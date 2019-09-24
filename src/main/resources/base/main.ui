@@ -37,7 +37,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>打开</string>
+     <string>打开目录</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="output_dir">

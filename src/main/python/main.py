@@ -4,6 +4,7 @@ import sys
 import time
 import traceback
 
+
 import ffmpeg
 from PyQt5 import uic, QtWidgets
 from PyQt5.QtCore import pyqtSlot, QRunnable, QThreadPool, QObject, pyqtSignal, QMutex
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 _QUIT = False
+
 
 class WorkerSignals(QObject):
     '''
@@ -97,20 +99,19 @@ class Ui(QtWidgets.QMainWindow):
         self.entries = None
         self.output_dir = None
         self.mutex = QMutex()
-        self.threadpool = QThreadPool()
+        self.thread_pool = QThreadPool()
         self.show()
 
     def convert(self, entry):
         in_filename = os.path.join(self.directory, entry)
         out_filename = os.path.join(self.output_dir, os.path.splitext(entry)[0] + '.mp3')
         process = (ffmpeg
-                  .input(in_filename)
-                  .output(out_filename, format='mp3')
-                  .overwrite_output()
-                  .run_async(quiet=True)
-                  )
+                   .input(in_filename)
+                   .output(out_filename, format='mp3')
+                   .overwrite_output()
+                   .run_async(quiet=True)
+                   )
         while process.poll() is None:
-            print('process running {}'.format(_QUIT))
             if _QUIT:
                 process.terminate()
                 process.wait()
@@ -121,17 +122,18 @@ class Ui(QtWidgets.QMainWindow):
         self.mutex.lock()
         self.progress_bar.setValue(self.progress_bar.value() + 1)
         self.mutex.unlock()
+        if self.progress_bar.value() == self.progress_bar.maximum():
+            self.convert_button.setDisabled(False)
 
     def convert_button_pressed(self):
-        self.convert_button.setEnabled(False)
         if self.output_dir and self.directory and self.entries:
             self.progress_bar.setMaximum(len(self.entries))
-
+            self.progress_bar.setValue(0)
+            self.convert_button.setEnabled(False)
             for entry in self.entries:
                 worker = Worker(self.convert, entry)
                 worker.signals.finished.connect(self.thread_complete)
-                self.threadpool.start(worker)
-        self.convert_button.setEnabled(True)
+                self.thread_pool.start(worker)
 
     def open_button_pressed(self):
         self.directory = str(QFileDialog.getExistingDirectory(self, "选择音频目录"))
@@ -147,11 +149,11 @@ class Ui(QtWidgets.QMainWindow):
             self.output_dir_edit.setText(self.output_dir)
 
     def exit(self):
-        self.threadpool.clear()
+        self.thread_pool.clear()
         global _QUIT
         _QUIT = True
         time.sleep(1.5)
-        self.threadpool.waitForDone()
+        self.thread_pool.waitForDone()
 
 
 if __name__ == '__main__':
