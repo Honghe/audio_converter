@@ -135,12 +135,15 @@ class Ui(QtWidgets.QMainWindow):
         self.mutex.unlock()
         if self.progress_bar.value() == self.progress_bar.maximum():
             self.convert_button.setDisabled(False)
+            self.statusBar.showMessage('文件全部转换完成.')
 
     def convert_button_pressed(self):
+        self.statusBar.showMessage('')
         if self.output_dir and self.directory and self.entries:
             self.progress_bar.setMaximum(len(self.entries))
             self.progress_bar.setValue(0)
             self.convert_button.setEnabled(False)
+            self.statusBar.showMessage('文件转换中...')
             for entry in self.entries:
                 worker = Worker(self.convert, entry)
                 worker.signals.finished.connect(self.thread_complete)
