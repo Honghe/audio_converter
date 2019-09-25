@@ -111,11 +111,16 @@ class Ui(QtWidgets.QMainWindow):
     def convert(self, entry):
         in_filename = os.path.join(self.directory, entry)
         out_filename = os.path.join(self.output_dir, os.path.splitext(entry)[0] + '.mp3')
+        # `run_async(quite=True)` will pipe subprocess stdout and stderr from ffmpeg-python code.
+        # This will block subprocess If parent process not read the PIPE,
+        # cause the PIPE bufsize is io.DEFAULT_BUFFER_SIZE by default.
+        # so use `run_async()` now.
+        # TODO Read stdout and stderr from PIPE for logs.
         process = (ffmpeg
                    .input(in_filename)
                    .output(out_filename, format='mp3')
                    .overwrite_output()
-                   .run_async(quiet=True)
+                   .run_async()
                    )
         while process.poll() is None:
             if _QUIT:
